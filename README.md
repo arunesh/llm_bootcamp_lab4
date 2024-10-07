@@ -2,7 +2,7 @@
 
 ## Status:
 
- Completed Milestone 4. Partial work on Milestone 5.
+ Completed Milestone 5. Partial work on Milestone 6.
 
 ## Basics
 

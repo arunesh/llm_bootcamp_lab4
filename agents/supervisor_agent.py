@@ -48,19 +48,25 @@ class SupervisorAgent(Agent):
                 print("callAgent('planning') but no project_desc ! ", agent_args_dict)
                 return None, Agent.AGENT_ERROR
             project_desc = agent_args_dict["project_desc"]
-            print(f"Agent name: {agent_name}, project_desc: {project_desc}")
+            print(f">>>>>>Agent name: {agent_name}, project_desc: {project_desc}")
 
             response_str, result_code = await PlanningAgent(client=self.client).execute_impl(project_desc)
-            if result_code == Agent.TASK_RESULT_SUCCESS:
-                self._stream_message_llm(response_str)
+            print(f"Planning agent completed: response_str = {response_str}, result_code = {result_code}")
+            if result_code == Agent.AGENT_PROCESSED:
+                print(f"Planning agent success: response_str = {response_str}")
+                await self._stream_message_llm(response_str)
             else:
                 error_response_str ="There was an error creating a plan for the given task."
                 return error_response_str, Agent.AGENT_ERROR
 
-            num_milestones = cl.user_session.get("num_milestones", 8)
+            num_milestones = cl.user_session.get("num_milestones", 0)
+            if num_milestones == 0:
+                num_milestones = self.num_milestones
+            print(f">> Going into implementatio mode, number of milestones: ${num_milestones}")
             for i in range (1, num_milestones):
-                print(f"Calling implementation agent for milestone {i}")
+                print(f">>>>>>Calling implementation agent for milestone {i}")
                 response_str, result_code = await self._call_implementation_agent(f" milestone {i} ")
+                print(f"Milestone {i} agent returned: response_str = {response_str}, result_code = {result_code}")
                 if result_code == Agent.AGENT_ERROR:
                     return response_str, Agent.AGENT_ERROR
 
@@ -70,8 +76,10 @@ class SupervisorAgent(Agent):
     
     async def _call_implementation_agent(self, milestone):
         response_str, result_code = await ImplAgent(client=self.client).execute_impl(milestone)
-        if result_code == Agent.TASK_RESULT_SUCCESS:
-            self._stream_message_llm(response_str)
+        if result_code == Agent.AGENT_PROCESSED:
+            print(f"_call_implementation_agent: milestone {milestone} agent returned: response_str = {response_str}, result_code = {result_code}")
+            await self._stream_message_llm(response_str)
+            return response_str, Agent.AGENT_PROCESSED
         else:
             error_response_str = f"There was an error implementing {milestone}."
             return error_response_str, Agent.AGENT_ERROR 

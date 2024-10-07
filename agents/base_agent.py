@@ -29,6 +29,7 @@ class Agent:
     TASK_RESULT_FAILURE: int = 1
 
 
+    num_milestones = 0
     BASE_TOOLS = [
         {
             "type": "function",
@@ -117,6 +118,7 @@ class Agent:
                     n = arguments_dict.get("num_milestones")
                     print(f"Number of milestones set to {n}")
                     cl.user_session.set("num_milestones", n)
+                    self.num_milestones = n
                 # Add a message to the message history
                 message_history.append({
                     "role": "system",
@@ -203,16 +205,16 @@ class Agent:
                 tool_call = part.choices[0].delta.tool_calls[0]
                 function_name_delta = tool_call.function.name or ""
                 arguments_delta = tool_call.function.arguments or ""
-                print(f"function_name_delta = {function_name_delta}")
+                #print(f"function_name_delta = {function_name_delta}")
                 
                 if function_name_delta and arguments:
-                    print(f"Adding {function_name_delta} and {arguments} to the stack.")
+                    #print(f"Adding {function_name_delta} and {arguments} to the stack.")
                     function_list.append((function_name, arguments)) # prev function.
                     arguments = ""
                     function_name = ""
                 function_name += function_name_delta
                 arguments += arguments_delta
-                print(f"arguments delta = {arguments_delta}")
+                #print(f"arguments delta = {arguments_delta}")
         
             if token := part.choices[0].delta.content or "":
                 await response_message.stream_token(token)        
@@ -258,3 +260,4 @@ class Agent:
         async for part in stream:
             if token := part.choices[0].delta.content or "":
                 await temp_response_message.stream_token(token)  
+        await temp_response_message.update()
