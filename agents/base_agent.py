@@ -49,7 +49,7 @@ class Agent:
                         },
                         "num_milestones": {
                             "type": "integer",
-                        "description": "When creating a planning document, this provides the total number of milestones present in the plan."
+                        "description": "When saving a planning document to `plan.md`, this provides the total number of milestones present in the plan."
                         }
                     },
                     "required": ["filename", "contents"],
@@ -109,6 +109,7 @@ class Agent:
             arguments_dict = json.loads(arguments)
             filename = arguments_dict.get("filename")
             contents = arguments_dict.get("contents")
+            print(">> updateArtifacts: arguments =", arguments)
             print(f"updateArtifacts: filename={filename}, contents={contents}")
             if filename and contents:
                 os.makedirs("artifacts", exist_ok=True)

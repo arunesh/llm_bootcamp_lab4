@@ -62,7 +62,7 @@ class SupervisorAgent(Agent):
             num_milestones = cl.user_session.get("num_milestones", 0)
             if num_milestones == 0:
                 num_milestones = self.num_milestones
-            print(f">> Going into implementatio mode, number of milestones: ${num_milestones}")
+            print(f">> Going into implementatio mode, number of milestones: {num_milestones}")
             for i in range (1, num_milestones):
                 print(f">>>>>>Calling implementation agent for milestone {i}")
                 response_str, result_code = await self._call_implementation_agent(f" milestone {i} ")

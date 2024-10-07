@@ -30,8 +30,8 @@ Milestones should be formatted like this:
  - [ ] 1. This is the first milestone
  - [ ] 2. This is the second milestone
  - [ ] 3. This is the third milestone
-
-If the user requests that a particular milestone be implemented, use the tool calling feature to implement the requested milestone.
+ 
+ Use the tool calling feature to save the plan to `plan.md`
 """
 
 
@@ -46,7 +46,7 @@ class PlanningAgent(Agent):
 
     
     async def execute_impl(self, user_task):
-        self.impl_message_history.append({"role": "system", "content": f"Create a plan for the following: {user_task}."})
+        self.impl_message_history.append({"role": "system", "content": f"Create a plan and use the tool feature to save it to `plan.md`, for the following task: {user_task}."})
         await self.execute(self.impl_message_history)
         return "Planning task completed and file saved.", Agent.AGENT_PROCESSED
         # TODO: Send a system message that planning is complete. 
