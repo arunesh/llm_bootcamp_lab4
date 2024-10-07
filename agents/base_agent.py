@@ -46,6 +46,10 @@ class Agent:
                             "type": "string",
                             "description": "The markdown, HTML, or CSS contents to write to the file.",
                         },
+                        "num_milestones": {
+                            "type": "integer",
+                        "description": "When creating a planning document, this provides the total number of milestones present in the plan."
+                        }
                     },
                     "required": ["filename", "contents"],
                     "additionalProperties": False,
@@ -109,7 +113,10 @@ class Agent:
                 os.makedirs("artifacts", exist_ok=True)
                 with open(os.path.join("artifacts", filename), "w") as file:
                     file.write(contents)
-                
+                if "num_milestones" in arguments_dict:
+                    n = arguments_dict.get("num_milestones")
+                    print(f"Number of milestones set to {n}")
+                    cl.user_session.set("num_milestones", n)
                 # Add a message to the message history
                 message_history.append({
                     "role": "system",
@@ -120,6 +127,7 @@ class Agent:
                 async for part in stream:
                     if token := part.choices[0].delta.content or "":
                         await response_message.stream_token(token)  
+                self.message_history = message_history
         elif function_name == "callAgent":
             arguments_dict = json.loads(arguments)
             agent_name = arguments_dict.get("agent_name")
@@ -134,21 +142,14 @@ class Agent:
             #     await ImplAgent(client=self.client).execute_impl(milestone)
 
                             
-            # Add a message to the message history
-            message_history.append({
-                "role": "system",
-                "content": agent_response_message_string
-            })
-
-            stream = await self.client.chat.completions.create(messages=message_history, stream=True, **self.gen_kwargs)
-            async for part in stream:
-                if token := part.choices[0].delta.content or "":
-                    await response_message.stream_token(token)  
+            # Add a message to the message history. This should be a separate message.
+            self._stream_message_llm(agent_response_message_string)
 
         else:
             print("No tool call")
 
         await response_message.update()
+
 
 
     async def callAgent(self, agent_args_dict):
@@ -242,3 +243,18 @@ class Agent:
         artifacts_content += "</ARTIFACTS>"
 
         return f"{self.prompt}\n{artifacts_content}"
+
+
+    async def _stream_message_llm(self, message_string):
+        message_history = self.message_history
+        message_history.append({
+                "role": "system",
+                "content": message_string
+            })
+        temp_response_message = cl.Message(content="")
+        await temp_response_message.send()
+
+        stream = await self.client.chat.completions.create(messages=message_history, stream=True, **self.gen_kwargs)
+        async for part in stream:
+            if token := part.choices[0].delta.content or "":
+                await temp_response_message.stream_token(token)  

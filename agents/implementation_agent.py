@@ -23,5 +23,6 @@ class ImplAgent(Agent):
     async def execute_impl(self, milestone):
         self.impl_message_history.append({"role": "system", "content": f"Implement milestone {milestone} and update the planning document."})
         await self.execute(self.impl_message_history)
+        return f"Milestone {milestone} completed.", Agent.AGENT_PROCESSED
 
     

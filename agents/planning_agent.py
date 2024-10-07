@@ -49,7 +49,7 @@ class PlanningAgent(Agent):
     async def execute_impl(self, user_task):
         self.impl_message_history.append({"role": "system", "content": f"Create a plan for the following: {user_task}."})
         await self.execute(self.impl_message_history)
-        return "Planning task completed and file saved."
+        return "Planning task completed and file saved.", Agent.AGENT_PROCESSED
         # TODO: Send a system message that planning is complete. 
 
     # no need to override callAgent: normally we would for the implementation agent, but we do it in the base class coz of M4.

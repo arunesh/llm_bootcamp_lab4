@@ -1,5 +1,7 @@
 from agents.base_agent import Agent, add_to_message
+from agents.implementation_agent import ImplAgent
 from utils import override
+import chainlit as cl
 
 SUPERVISOR_PROMPT = """
 
@@ -52,12 +54,29 @@ class SupervisorAgent(Agent):
             print(f"Agent name: {agent_name}, task_desc: {task_desc}")
 
             response_str, result_code = await PlanningAgent(client=self.client).execute_impl(task_desc)
-            #if result_code == Agent.TASK_RESULT_SUCCESS:
-            #    add_to_message(super.message_history, super.client, response_str, message_string, **gen_kwargs)
+            if result_code == Agent.TASK_RESULT_SUCCESS:
+                self._stream_message_llm(response_str)
+            else:
+                error_response_str ="There was an error creating a plan for the given task."
+                return error_response_str, Agent.AGENT_ERROR
 
-            # add response_str to system message and perform the next step, i.e. implementation. 
-            return response_str, Agent.AGENT_PROCESSED
+            num_milestones = cl.user_session.get("num_milestones", 8)
+            for i in range (1, num_milestones):
+                print(f"Calling implementation agent for milestone {i}")
+                response_str, result_code = await self._call_implementation_agent(f" milestone {i} ")
+                if result_code == Agent.AGENT_ERROR:
+                    return response_str, Agent.AGENT_ERROR
+
+            return "All milestones complete.", Agent.AGENT_PROCESSED
         else:
             return None, Agent.AGENT_UNPROCESSED  # The child class might process it.
+    
+    async def _call_implementation_agent(self, milestone):
+        response_str, result_code = await ImplAgent(client=self.client).execute_impl(milestone)
+        if result_code == Agent.TASK_RESULT_SUCCESS:
+            self._stream_message_llm(response_str)
+        else:
+            error_response_str = f"There was an error implementing {milestone}."
+            return error_response_str, Agent.AGENT_ERROR 
 
         
