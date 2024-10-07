@@ -168,7 +168,9 @@ class Agent:
 
                             
             # Add a message to the message history. This should be a separate message.
-            await self._stream_message_llm(agent_response_message_string)
+            print(f"## agent response = {agent_response_message_string}, result code = {result_code}")
+            if agent_response_message_string:
+                await self._stream_message_llm(agent_response_message_string)
 
         elif function_name == "reviewResult":
             arguments_dict = json.loads(arguments)

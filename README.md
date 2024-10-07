@@ -2,7 +2,12 @@
 
 ## Status:
 
- Completed Milestone 5. Partial work on Milestone 6.
+ Completed Milestone 6.
+```
+ app.py for milestone 4.
+ app_m5.py for milestone 5.
+ app_m6.py for milestone 6.
+ ```
 
 ## Basics
 
