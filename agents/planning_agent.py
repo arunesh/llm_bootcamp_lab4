@@ -1,5 +1,4 @@
 from agents.base_agent import Agent
-from utils import override
 
 PLANNING_PROMPT = """\
 You are a software architect, preparing to build the web page in the image that the user sends. 

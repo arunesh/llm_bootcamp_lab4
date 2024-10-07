@@ -143,7 +143,7 @@ class Agent:
 
                             
             # Add a message to the message history. This should be a separate message.
-            self._stream_message_llm(agent_response_message_string)
+            await self._stream_message_llm(agent_response_message_string)
 
         else:
             print("No tool call")

@@ -1,6 +1,5 @@
 from agents.base_agent import Agent, add_to_message
 from agents.implementation_agent import ImplAgent
-from utils import override
 import chainlit as cl
 
 SUPERVISOR_PROMPT = """
@@ -32,8 +31,6 @@ class SupervisorAgent(Agent):
         await self.execute(message_history)
         return "Project implementation completed.", Agent.TASK_RESULT_SUCCESS
 
-# TODO: pass in the message history.
-    @override(Agent.callAgent)  
     async def callAgent(self, agent_args_dict):
         msg, result_code = await super().callAgent(agent_args_dict)
         if  result_code != Agent.AGENT_UNPROCESSED:
@@ -46,14 +43,14 @@ class SupervisorAgent(Agent):
             print(f"Recursive call to self. Can't proceed. self = f{self.name}, agent_name = {agent_name}")
             return None, Agent.AGENT_ERROR
         from agents.planning_agent import PlanningAgent
-        if agent_name == PlanningAgent.IMPL_AGENT_STRING:
-            if "task_sesc" not in agent_args_dict:
-                print("callAgent('planning') but no task_desc ! ", agent_args_dict)
+        if agent_name == PlanningAgent.PLANNING_AGENT_STR:
+            if "project_desc" not in agent_args_dict:
+                print("callAgent('planning') but no project_desc ! ", agent_args_dict)
                 return None, Agent.AGENT_ERROR
-            task_desc = agent_args_dict["task_desc"]
-            print(f"Agent name: {agent_name}, task_desc: {task_desc}")
+            project_desc = agent_args_dict["project_desc"]
+            print(f"Agent name: {agent_name}, project_desc: {project_desc}")
 
-            response_str, result_code = await PlanningAgent(client=self.client).execute_impl(task_desc)
+            response_str, result_code = await PlanningAgent(client=self.client).execute_impl(project_desc)
             if result_code == Agent.TASK_RESULT_SUCCESS:
                 self._stream_message_llm(response_str)
             else:
