@@ -1,5 +1,6 @@
 from agents.base_agent import Agent, add_to_message
 from agents.implementation_agent import ImplAgent
+from agents.reviewer_agent import ReviewerAgent
 import chainlit as cl
 
 SUPERVISOR_PROMPT = """
@@ -65,10 +66,21 @@ class SupervisorAgent(Agent):
             print(f">> Going into implementatio mode, number of milestones: {num_milestones}")
             for i in range (1, num_milestones):
                 print(f">>>>>>Calling implementation agent for milestone {i}")
-                response_str, result_code = await self._call_implementation_agent(f" milestone {i} ")
-                print(f"Milestone {i} agent returned: response_str = {response_str}, result_code = {result_code}")
-                if result_code == Agent.AGENT_ERROR:
-                    return response_str, Agent.AGENT_ERROR
+                review_passed = False
+                num_tries = 0
+                while (not review_passed and num_tries < 5):
+                    print(f"           Try number {num_tries + 1}")
+                    response_str, result_code = await self._call_implementation_agent(f" milestone {i} ")
+                    print(f"Milestone {i} agent returned: response_str = {response_str}, result_code = {result_code}")
+                    if result_code == Agent.AGENT_ERROR:
+                        return response_str, Agent.AGENT_ERROR
+                    # Review the work
+                    reviewer_agent = ReviewerAgent(client=self.client)
+                    response_str, result_code = await reviewer_agent.execute_impl(f"milestone {i}")
+                    print(f">>>>> Received result for milestone {reviewer_agent.milestone} as result: {reviewer_agent.review_result}")
+                    if reviewer_agent.review_result != "no":
+                        review_passed = True
+                    num_tries += 1
 
             return "All milestones complete.", Agent.AGENT_PROCESSED
         else:

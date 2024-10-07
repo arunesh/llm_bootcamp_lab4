@@ -83,6 +83,28 @@ class Agent:
                 },
             }
         },
+        {
+            "type": "function",
+            "function": {
+                "name": "reviewResult",
+                "description": "Use this to provide a review for a given milestone and artifacts.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "milestone": {
+                            "type": "string",
+                            "description": "The milestone under consideration.",
+                        },
+                        "result": {
+                            "type": "string",
+                            "description": "A 'yes' or a 'no' depending on whether the milestone has been implemented in the attached artifacts.",
+                        },
+                    },
+                    "required": ["milestone","result"],
+                    "additionalProperties": False,
+                },
+            }
+        },
     ]
 
     def __init__(self, name, client, prompt="", gen_kwargs=None):
@@ -148,11 +170,18 @@ class Agent:
             # Add a message to the message history. This should be a separate message.
             await self._stream_message_llm(agent_response_message_string)
 
+        elif function_name == "reviewResult":
+            arguments_dict = json.loads(arguments)
+            result = arguments_dict.get("result")
+            milestone = arguments_dict.get("milestone")
+            self.review_result = result
+            self.review_result_milestone = milestone
+            print(f">> Received review result for milestone {milestone} as result: {result}")
+
         else:
             print("No tool call")
 
         await response_message.update()
-
 
 
     async def callAgent(self, agent_args_dict):
